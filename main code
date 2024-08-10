@@ -1,0 +1,62 @@
+% Create VideoReader object
+videoReader = VideoReader('C:\Users\tejas\Downloads\vtest.avi');
+
+% Randomly select 30 frames
+numFrames = videoReader.NumFrames;
+frameIndices = randi([1, numFrames], 1, 30);
+
+% Store captured frames in a cell array
+frames = cell(1, 30);
+for i = 1:numel(frameIndices)
+    videoReader.CurrentTime = (frameIndices(i) - 1) / videoReader.FrameRate;
+    frame = readFrame(videoReader);
+    frames{i} = frame;
+end
+
+% Compute median frame
+frameMedian = median(cat(4, frames{:}), 4);
+frameMedian = uint8(frameMedian);
+
+% Convert to grayscale
+grayFrameMedian = rgb2gray(frameMedian);
+
+% Initialize video writer
+videoWriter = VideoWriter('Detect.avi');
+open(videoWriter);
+
+% Close and reopen VideoReader for processing frames
+videoReader = VideoReader('C:\Users\tejas\Downloads\vtest.avi');
+
+% Process each frame
+while hasFrame(videoReader)
+    frame = readFrame(videoReader);
+    
+    % Convert to grayscale
+    grayFrame = rgb2gray(frame);
+    
+    % Calculate absolute difference with median frame
+    dFrame = imabsdiff(grayFrame, grayFrameMedian);
+    
+    % Apply Gaussian blur
+    blurFrame = imgaussfilt(dFrame, 3); % Adjust sigma value if needed
+    
+    % Binarize frame using Otsu's method
+    threshold = graythresh(blurFrame);
+    binFrame = imbinarize(blurFrame, threshold);
+    
+    % Identify contours
+    [contours, ~] = bwlabel(binFrame);
+    stats = regionprops('table', contours, 'BoundingBox');
+    
+    % Draw bounding boxes
+    for k = 1:numel(stats)
+        bbox = stats.BoundingBox(k, :);
+        frame = insertShape(frame, 'Rectangle', bbox, 'Color', [123, 0, 255], 'LineWidth', 2);
+    end
+    
+    % Write processed frame to video
+    writeVideo(videoWriter, frame);
+end
+
+% Close video writer
+close(videoWriter);
