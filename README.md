@@ -1,1 +1,2 @@
 # motiondetector
+The Human Motion Detector is a project aimed at sensing and detecting the presence and movement of humans within a specified detection range.Through sophisticated signal processing techniques and machine learning algorithms, the system will analyze the sensor data in real-time to identify and track human presence and motion patterns. The utilization of machine learning will enable the system to adapt and optimize its detection performance based on changing environmental conditions and user preferences
